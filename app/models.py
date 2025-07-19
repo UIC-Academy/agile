@@ -1,5 +1,5 @@
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
 
@@ -25,6 +25,29 @@ class User(Base, TimeStampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_deleted: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    owned_projects: Mapped[list["Project"]] = relationship(
+        "Project", back_populates="owner"
+    )
+    member_projects: Mapped[list["ProjectMember"]] = relationship(
+        "Project", back_populates="user"
+    )
+    comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="user")
+    assigned_tasks: Mapped[list["Task"]] = relationship(
+        "Task", back_populates="assignee"
+    )
+    reported_tasks: Mapped[list["Task"]] = relationship(
+        "Task", back_populates="reporter"
+    )
+    received_notifications: Mapped[list["Notification"]] = relationship(
+        "Notification", back_populates="recipient"
+    )
+    sent_notifications: Mapped[list["Notification"]] = relationship(
+        "Notification", back_populates="sender"
+    )
+    audit_logs: Mapped[list["AuditLog"]] = relationship(
+        "AuditLog", back_populates="user"
+    )
+
     def __str__(self):
         return f"User(email={self.email})"
 
@@ -39,6 +62,14 @@ class Project(Base, TimeStampMixin):
     owner_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     is_private: Mapped[bool] = mapped_column(Boolean, default=False)
+
+    owner: Mapped["User"] = relationship("User", back_populates="owned_projects")
+    members: Mapped[list["ProjectMember"]] = relationship(
+        "ProjectMember", back_populates="project"
+    )
+    notifications: Mapped[list["Notification"]] = relationship(
+        "Notification", back_populates="project"
+    )
 
     def __str__(self):
         return f"Project(name={self.key})"
@@ -55,6 +86,9 @@ class ProjectMember(Base):
     joined_at: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True), default=func.now()
     )
+
+    project: Mapped["Project"] = relationship("Project", back_populates="members")
+    user: Mapped["User"] = relationship("User", back_populates="member_projects")
 
     def __str__(self):
         return f"ProjectMember(user_id={self.user_id}, project_id={self.project_id})"
@@ -78,6 +112,15 @@ class Task(Base, TimeStampMixin):
     reporter_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     due_date: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=True)
 
+    project: Mapped["Project"] = relationship("Project", back_populates="tasks")
+    status: Mapped["Status"] = relationship("Status", back_populates="tasks")
+    assignee: Mapped["User"] = relationship("User", back_populates="assigned_tasks")
+    reporter: Mapped["User"] = relationship("User", back_populates="reported_tasks")
+    comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="task")
+    notifications: Mapped[list["Notification"]] = relationship(
+        "Notification", back_populates="task"
+    )
+
     def __str__(self):
         return f"Task(summary={self.summary})"
 
@@ -88,6 +131,8 @@ class Status(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str] = mapped_column(String(255), nullable=True)
+
+    tasks: Mapped[list["Task"]] = relationship("Task", back_populates="status")
 
     def __str__(self):
         return f"Status(name={self.name})"
@@ -100,6 +145,9 @@ class Comment(Base, TimeStampMixin):
     task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"))
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
     content: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    task: Mapped["Task"] = relationship("Task", back_populates="comments")
+    user: Mapped["User"] = relationship("User", back_populates="comments")
 
     def __str__(self):
         return f"Comment(user_id={self.user_id})"
@@ -120,6 +168,13 @@ class Notification(Base, TimeStampMixin):
     message: Mapped[str] = mapped_column(String(255), nullable=False)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
 
+    recipient: Mapped["User"] = relationship(
+        "User", back_populates="received_notifications"
+    )
+    sender: Mapped["User"] = relationship("User", back_populates="sent_notifications")
+    task: Mapped["Task"] = relationship("Task", back_populates="notifications")
+    project: Mapped["Project"] = relationship("Project", back_populates="notifications")
+
     def __str__(self):
         return f"Notification(user_id={self.recipient_id})"
 
@@ -136,6 +191,9 @@ class AuditLog(Base):
     timestamp: Mapped[DateTime] = mapped_column(
         DateTime(timezone=True), default=func.now()
     )
+
+    user: Mapped["User"] = relationship("User", back_populates="audit_logs")
+    task: Mapped["Task"] = relationship("Task", back_populates="audit_logs")
 
     def __str__(self):
         return f"AuditLog(user_id={self.user_id})"
