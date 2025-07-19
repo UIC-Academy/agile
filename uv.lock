@@ -24,7 +24,7 @@ requires-dist = [
     { name = "alembic", specifier = ">=1.16.4" },
     { name = "argon2-cffi", specifier = ">=25.1.0" },
     { name = "fastapi", extras = ["all"], specifier = ">=0.116.1" },
-    { name = "passlib", extras = ["cryptography"], specifier = ">=1.7.4" },
+    { name = "passlib", specifier = ">=1.7.4" },
     { name = "pre-commit", specifier = ">=4.2.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.10" },
     { name = "python-dotenv", specifier = ">=1.1.1" },
