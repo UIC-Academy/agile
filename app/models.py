@@ -29,20 +29,22 @@ class User(Base, TimeStampMixin):
         "Project", back_populates="owner"
     )
     member_projects: Mapped[list["ProjectMember"]] = relationship(
-        "Project", back_populates="user"
+        "ProjectMember", back_populates="user"
     )
     comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="user")
     assigned_tasks: Mapped[list["Task"]] = relationship(
-        "Task", back_populates="assignee"
+        "Task", back_populates="assignee", foreign_keys="Task.assignee_id"
     )
     reported_tasks: Mapped[list["Task"]] = relationship(
-        "Task", back_populates="reporter"
+        "Task", back_populates="reporter", foreign_keys="Task.reporter_id"
     )
     received_notifications: Mapped[list["Notification"]] = relationship(
-        "Notification", back_populates="recipient"
+        "Notification",
+        back_populates="recipient",
+        foreign_keys="Notification.recipient_id",
     )
     sent_notifications: Mapped[list["Notification"]] = relationship(
-        "Notification", back_populates="sender"
+        "Notification", back_populates="sender", foreign_keys="Notification.sender_id"
     )
     audit_logs: Mapped[list["AuditLog"]] = relationship(
         "AuditLog", back_populates="user"
@@ -70,6 +72,7 @@ class Project(Base, TimeStampMixin):
     notifications: Mapped[list["Notification"]] = relationship(
         "Notification", back_populates="project"
     )
+    tasks: Mapped[list["Task"]] = relationship("Task", back_populates="project")
 
     def __str__(self):
         return f"Project(name={self.key})"
@@ -114,11 +117,18 @@ class Task(Base, TimeStampMixin):
 
     project: Mapped["Project"] = relationship("Project", back_populates="tasks")
     status: Mapped["Status"] = relationship("Status", back_populates="tasks")
-    assignee: Mapped["User"] = relationship("User", back_populates="assigned_tasks")
-    reporter: Mapped["User"] = relationship("User", back_populates="reported_tasks")
+    assignee: Mapped["User"] = relationship(
+        "User", back_populates="assigned_tasks", foreign_keys="Task.assignee_id"
+    )
+    reporter: Mapped["User"] = relationship(
+        "User", back_populates="reported_tasks", foreign_keys="Task.reporter_id"
+    )
     comments: Mapped[list["Comment"]] = relationship("Comment", back_populates="task")
     notifications: Mapped[list["Notification"]] = relationship(
         "Notification", back_populates="task"
+    )
+    audit_logs: Mapped[list["AuditLog"]] = relationship(
+        "AuditLog", back_populates="task"
     )
 
     def __str__(self):
@@ -169,9 +179,15 @@ class Notification(Base, TimeStampMixin):
     is_read: Mapped[bool] = mapped_column(Boolean, default=False)
 
     recipient: Mapped["User"] = relationship(
-        "User", back_populates="received_notifications"
+        "User",
+        back_populates="received_notifications",
+        foreign_keys="Notification.recipient_id",
     )
-    sender: Mapped["User"] = relationship("User", back_populates="sent_notifications")
+    sender: Mapped["User"] = relationship(
+        "User",
+        back_populates="sent_notifications",
+        foreign_keys="Notification.sender_id",
+    )
     task: Mapped["Task"] = relationship("Task", back_populates="notifications")
     project: Mapped["Project"] = relationship("Project", back_populates="notifications")
 
