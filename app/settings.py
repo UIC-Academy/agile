@@ -16,3 +16,13 @@ SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
 ACCESS_TOKEN_EXPIRE_MINUTES = 180
 REFRESH_TOKEN_EXPIRE_MINUTES = 42600
+
+MEDIA_DIR = "media"
+MEDIA_URL = "/media"
+MEDIA_PATH = Path(MEDIA_DIR)
+MEDIA_PATH.mkdir(exist_ok=True, parents=True)
+
+STATIC_DIR = "static"
+STATIC_URL = "/static"
+STATIC_PATH = Path(STATIC_DIR)
+STATIC_PATH.mkdir(exist_ok=True, parents=True)

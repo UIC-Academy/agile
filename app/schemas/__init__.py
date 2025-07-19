@@ -1,6 +1,7 @@
-from .auth import TokenResponse, UserRegisterRequest
+from .auth import RoleEnum, TokenResponse, UserRegisterRequest
 
 __all__ = [
+    "RoleEnum",
     "TokenResponse",
     "UserRegisterRequest",
 ]
