@@ -8,7 +8,7 @@ from app.utils import create_jwt_token, hash_password, verify_password
 
 router = APIRouter(
     prefix="/auth",
-    tags=["auth"],
+    tags=["Authentication"],
 )
 
 
