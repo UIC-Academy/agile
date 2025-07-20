@@ -8,8 +8,10 @@ from starlette_admin.exceptions import LoginFailed
 
 from app.dependencies import get_db
 from app.models import User
+from app.schemas import RoleEnum
 from app.settings import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
+    ADMIN_REMEMBER_ME_EXPIRE_MINUTES,
     ALGORITHM,
     SECRET_KEY,
 )
@@ -31,13 +33,17 @@ class JSONAuthProvider(AuthProvider):
         if not user:
             raise LoginFailed("User not found.")
 
-        if user and not user.is_admin:
+        if user and user.role != RoleEnum.admin:
             raise LoginFailed("User is not admin.")
 
         if not verify_password(password, user.password):
             raise LoginFailed("Invalid password.")
 
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        if remember_me:
+            access_token_expires = timedelta(minutes=ADMIN_REMEMBER_ME_EXPIRE_MINUTES)
+        else:
+            access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+
         token_data = {
             "sub": user.email,
             "exp": datetime.now(UTC) + access_token_expires,
@@ -70,7 +76,7 @@ class JSONAuthProvider(AuthProvider):
             db: Session = next(get_db())
             user = db.query(User).filter(User.email == email).first()
 
-            if user is None or not user.is_admin:
+            if user is None or user.role != RoleEnum.admin:
                 return None
 
             return user

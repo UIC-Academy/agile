@@ -8,7 +8,7 @@ from starlette.requests import Request
 from starlette_admin.contrib.sqla import ModelView
 from starlette_admin.fields import EnumField, ImageField, PasswordField
 
-from app.schemas import RoleEnum
+from app.schemas import RoleEnum, StatusEnum
 from app.settings import MEDIA_PATH
 from app.utils import hash_password
 
@@ -50,18 +50,18 @@ class UserAdminView(ModelView):
         print("Create is working!")
         print("=======================", "avatar" in data, data["avatar"])
 
-        if "avatar" in data:
-            # Handle the avatar upload
-            avatar_file = data["avatar"]
-            if isinstance(avatar_file, tuple) and len(avatar_file) > 0:
-                avatar_file = avatar_file[0]  # Get the first file if it's a list
+        # if "avatar" in data:
+        #     # Handle the avatar upload
+        #     avatar_file = data["avatar"]
+        #     if isinstance(avatar_file, tuple) and len(avatar_file) > 0:
+        #         avatar_file = avatar_file[0]  # Get the first file if it's a list
 
-            print("--------------------------", avatar_file)
+        #     print("--------------------------", avatar_file)
 
-            if avatar_file and avatar_file.filename:
-                avatar_filename = await self._handle_avatar_upload(avatar_file)
-                print("================= Avatar filename", avatar_filename)
-                data["avatar"] = avatar_filename  # Store only filename, not full path
+        #     if avatar_file and avatar_file.filename:
+        #         avatar_filename = await self._handle_avatar_upload(avatar_file)
+        #         print("================= Avatar filename", avatar_filename)
+        #         data["avatar"] = avatar_filename  # Store only filename, not full path
 
         return await super().create(request, data)
 
@@ -82,18 +82,30 @@ class UserAdminView(ModelView):
 class ProjectAdminView(ModelView):
     fields: ClassVar[list[str]] = [
         "id",
+        "key",
         "name",
+        "description",
+        "owner",
+        "is_active",
+        "is_private",
+        "created_at",
+        "updated_at",
+    ]
+    exclude_fields_from_list: ClassVar[list[str]] = [
         "description",
         "created_at",
         "updated_at",
     ]
-    exclude_fields_from_list: ClassVar[list[str]] = ["created_at", "updated_at"]
     exclude_fields_from_create: ClassVar[list[str]] = ["created_at", "updated_at"]
     exclude_fields_from_edit: ClassVar[list[str]] = ["created_at", "updated_at"]
     export_fields: ClassVar[list[str]] = [
         "id",
+        "key",
         "name",
         "description",
+        "owner",
+        "is_active",
+        "is_private",
         "created_at",
         "updated_at",
     ]
@@ -103,21 +115,18 @@ class ProjectAdminView(ModelView):
 class ProjectMemberAdminView(ModelView):
     fields: ClassVar[list[str]] = [
         "id",
-        "user_id",
-        "project_id",
+        "user",
+        "project",
         "joined_at",
-        "created_at",
-        "updated_at",
     ]
-    exclude_fields_from_list: ClassVar[list[str]] = ["created_at", "updated_at"]
-    exclude_fields_from_create: ClassVar[list[str]] = ["created_at", "updated_at"]
-    exclude_fields_from_edit: ClassVar[list[str]] = ["created_at", "updated_at"]
+    exclude_fields_from_list: ClassVar[list[str]] = ["joined_at"]
+    exclude_fields_from_create: ClassVar[list[str]] = ["joined_at"]
+    exclude_fields_from_edit: ClassVar[list[str]] = ["joined_at"]
     export_fields: ClassVar[list[str]] = [
         "id",
         "user_id",
         "project_id",
-        "created_at",
-        "updated_at",
+        "joined_at",
     ]
     export_types: ClassVar[list[str]] = ["csv", "excel", "pdf", "print"]
 
@@ -125,8 +134,68 @@ class ProjectMemberAdminView(ModelView):
 class TaskAdminView(ModelView):
     fields: ClassVar[list[str]] = [
         "id",
+        "key",
+        "summary",
+        "description",
+        "project",
+        EnumField("status", enum=StatusEnum),
+        "priority",
+        "assignee",
+        "reporter",
+        "due_date",
+        "created_at",
+        "updated_at",
+    ]
+    exclude_fields_from_list: ClassVar[list[str]] = [
+        "description",
+        "assignee",
+        "reporter",
+        "due_date",
+        "created_at",
+        "updated_at",
+    ]
+    exclude_fields_from_create: ClassVar[list[str]] = ["created_at", "updated_at"]
+    exclude_fields_from_edit: ClassVar[list[str]] = ["created_at", "updated_at"]
+    export_fields: ClassVar[list[str]] = [
+        "id",
+        "key",
+        "summary",
+        "description",
+        "project",
+        "status",
+        "priority",
+        "assignee",
+        "reporter",
+        "due_date",
+        "created_at",
+        "updated_at",
+    ]
+    export_types: ClassVar[list[str]] = ["csv", "excel", "pdf", "print"]
+
+
+class StatusAdminView(ModelView):
+    fields: ClassVar[list[str]] = [
+        "id",
         "name",
         "description",
+    ]
+    exclude_fields_from_list: ClassVar[list[str]] = []
+    exclude_fields_from_create: ClassVar[list[str]] = []
+    exclude_fields_from_edit: ClassVar[list[str]] = []
+    export_fields: ClassVar[list[str]] = [
+        "id",
+        "name",
+        "description",
+    ]
+    export_types: ClassVar[list[str]] = ["csv", "excel", "pdf", "print"]
+
+
+class CommentAdminView(ModelView):
+    fields: ClassVar[list[str]] = [
+        "id",
+        "task",
+        "user",
+        "content",
         "created_at",
         "updated_at",
     ]
@@ -135,8 +204,60 @@ class TaskAdminView(ModelView):
     exclude_fields_from_edit: ClassVar[list[str]] = ["created_at", "updated_at"]
     export_fields: ClassVar[list[str]] = [
         "id",
-        "name",
-        "description",
+        "task",
+        "user",
+        "content",
+        "created_at",
+        "updated_at",
+    ]
+    export_types: ClassVar[list[str]] = ["csv", "excel", "pdf", "print"]
+
+
+class NotificationAdminView(ModelView):
+    fields: ClassVar[list[str]] = [
+        "id",
+        "recipient",
+        "sender",
+        "task",
+        "project",
+        "message",
+        "is_read",
+        "created_at",
+        "updated_at",
+    ]
+    exclude_fields_from_list: ClassVar[list[str]] = ["created_at", "updated_at"]
+    exclude_fields_from_create: ClassVar[list[str]] = ["created_at", "updated_at"]
+    exclude_fields_from_edit: ClassVar[list[str]] = ["created_at", "updated_at"]
+    export_fields: ClassVar[list[str]] = [
+        "id",
+        "recipient_id",
+        "sender_id",
+        "task_id",
+        "project_id",
+        "message",
+        "is_read",
+        "created_at",
+        "updated_at",
+    ]
+    export_types: ClassVar[list[str]] = ["csv", "excel", "pdf", "print"]
+
+
+class AuditLogAdminView(ModelView):
+    fields: ClassVar[list[str]] = [
+        "id",
+        "user",
+        "task",
+        "action",
+        "timestamp",
+    ]
+    exclude_fields_from_list: ClassVar[list[str]] = ["task_id", "timestamp"]
+    exclude_fields_from_create: ClassVar[list[str]] = ["timestamp"]
+    exclude_fields_from_edit: ClassVar[list[str]] = ["timestamp"]
+    export_fields: ClassVar[list[str]] = [
+        "id",
+        "user_id",
+        "task_id",
+        "action",
         "created_at",
         "updated_at",
     ]
