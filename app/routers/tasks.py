@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Response
 
 from app.dependencies import (
     admin_user_dep,
@@ -128,4 +128,16 @@ async def delete_task(current_user: task_creatable_user_dep, db: db_dep, task_id
     db.delete(task)
     db.commit()
 
-    return {"detail": "Task deleted successfully"}
+    return Response(status_code=204)
+
+
+@router.get("/{task_key}/comments/")
+async def get_task_comments(current_user: current_user_dep, db: db_dep, task_key: str):
+    task = db.query(Task).filter(Task.key == task_key).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    comments = task.comments.all()
+
+    return comments

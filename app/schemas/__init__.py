@@ -1,4 +1,6 @@
 from .auth import TokenResponse, UserRegisterRequest
+from .comments import CommentCreateRequest, CommentResponse, CommentUpdateRequest
+from .notifications import NotificationResponse
 from .projects import (
     ProjectCreateRequest,
     ProjectInviteRequest,
@@ -17,6 +19,10 @@ from .tasks import (
 from .users import ProfileResponse, ProfileUpdateRequest
 
 __all__ = [
+    "CommentCreateRequest",
+    "CommentResponse",
+    "CommentUpdateRequest",
+    "NotificationResponse",
     "ProfileResponse",
     "ProfileUpdateRequest",
     "ProjectCreateRequest",
