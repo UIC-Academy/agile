@@ -6,6 +6,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
+from app.enums import RoleEnum
 from app.models import User
 from app.settings import ALGORITHM, SECRET_KEY
 
@@ -45,6 +46,9 @@ async def get_current_user(db: db_dep, token: oauth2_scheme_dep):
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
 
+        if not user.is_active:
+            raise HTTPException(status_code=400, detail="Inactive user")
+
         return user
 
     except JWTError as err:
@@ -55,13 +59,35 @@ async def get_current_user(db: db_dep, token: oauth2_scheme_dep):
         ) from err
 
 
-async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
+current_user_dep = Annotated[User, Depends(get_current_user)]
+
+
+async def get_admin_user(
+    current_user: current_user_dep,
 ):
-    if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    if current_user.role != RoleEnum.admin:
+        raise HTTPException(status_code=400, detail="User is not admin")
     return current_user
 
 
-current_user_dep = Annotated[User, Depends(get_current_user)]
-current_active_user_dep = Annotated[User, Depends(get_current_active_user)]
+async def get_management_user(current_user: current_user_dep):
+    if current_user.role not in [RoleEnum.admin, RoleEnum.manager]:
+        raise HTTPException(
+            status_code=400,
+            detail="You are not admin or manager. You can't perform this action.",
+        )
+    return current_user
+
+
+async def get_task_creatable_user(current_user: current_user_dep):
+    if current_user.role not in [RoleEnum.admin, RoleEnum.manager, RoleEnum.tester]:
+        raise HTTPException(
+            status_code=400,
+            detail="You are not admin, manager or tester. You can't perform this action.",
+        )
+    return current_user
+
+
+admin_user_dep = Annotated[User, Depends(get_admin_user)]
+management_user_dep = Annotated[User, Depends(get_management_user)]
+task_creatable_user_dep = Annotated[User, Depends(get_task_creatable_user)]

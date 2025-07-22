@@ -1,8 +1,9 @@
 from fastapi import APIRouter, HTTPException
 
 from app.dependencies import db_dep, oauth2_form_dep
+from app.enums import RoleEnum
 from app.models import User
-from app.schemas import RoleEnum, TokenResponse, UserRegisterRequest
+from app.schemas import TokenResponse, UserRegisterRequest
 from app.settings import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES
 from app.utils import create_jwt_token, hash_password, verify_password
 
