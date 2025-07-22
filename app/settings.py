@@ -27,3 +27,6 @@ STATIC_DIR = "static"
 STATIC_URL = "/static"
 STATIC_PATH = Path(STATIC_DIR)
 STATIC_PATH.mkdir(exist_ok=True, parents=True)
+
+ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
+MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB

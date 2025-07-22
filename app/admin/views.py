@@ -8,7 +8,7 @@ from starlette.requests import Request
 from starlette_admin.contrib.sqla import ModelView
 from starlette_admin.fields import EnumField, ImageField, PasswordField
 
-from app.schemas import RoleEnum, StatusEnum
+from app.enums import RoleEnum, StatusEnum
 from app.settings import MEDIA_PATH
 from app.utils import hash_password
 

@@ -7,8 +7,8 @@ from starlette_admin.auth import AuthProvider
 from starlette_admin.exceptions import LoginFailed
 
 from app.dependencies import get_db
+from app.enums import RoleEnum
 from app.models import User
-from app.schemas import RoleEnum
 from app.settings import (
     ACCESS_TOKEN_EXPIRE_MINUTES,
     ADMIN_REMEMBER_ME_EXPIRE_MINUTES,
