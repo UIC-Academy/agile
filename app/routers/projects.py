@@ -14,6 +14,7 @@ from app.schemas import (
     ProjectMemberResponse,
     ProjectResponse,
     ProjectUpdateRequest,
+    TaskListResponse,
 )
 from app.services import generate_project_key
 
@@ -157,3 +158,17 @@ async def kick_project_member(
     db.refresh(project)
 
     return project
+
+
+@router.get("/{project_key}/tasks/", response_model=list[TaskListResponse])
+async def get_project_tasks(
+    current_user: current_user_dep, db: db_dep, project_key: str
+):
+    project = db.query(Project).filter(Project.key == project_key).first()
+
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    tasks = project.tasks.all()
+
+    return tasks

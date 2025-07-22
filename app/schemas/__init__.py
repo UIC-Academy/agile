@@ -7,6 +7,13 @@ from .projects import (
     ProjectResponse,
     ProjectUpdateRequest,
 )
+from .tasks import (
+    TaskCreateRequest,
+    TaskDetailResponse,
+    TaskListResponse,
+    TaskMoveRequest,
+    TaskUpdateRequest,
+)
 from .users import ProfileResponse, ProfileUpdateRequest
 
 __all__ = [
@@ -18,6 +25,11 @@ __all__ = [
     "ProjectMemberResponse",
     "ProjectResponse",
     "ProjectUpdateRequest",
+    "TaskCreateRequest",
+    "TaskDetailResponse",
+    "TaskListResponse",
+    "TaskMoveRequest",
+    "TaskUpdateRequest",
     "TokenResponse",
     "UserRegisterRequest",
 ]
