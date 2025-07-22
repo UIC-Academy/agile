@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from app.dependencies import db_dep, oauth2_form_dep
 from app.models import User
-from app.schemas import TokenResponse, UserRegisterRequest
+from app.schemas import RoleEnum, TokenResponse, UserRegisterRequest
 from app.settings import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES
 from app.utils import create_jwt_token, hash_password, verify_password
 
@@ -25,15 +25,15 @@ async def register_user(db: db_dep, register_data: UserRegisterRequest):
         user = User(
             email=register_data.email,
             password=hash_password(register_data.password),
-            is_admin=True,
-            is_active=False,  # not confirmed yet
+            role=RoleEnum.admin,
+            # is_active=False,  # not confirmed yet
         )
     else:
         user = User(
             email=register_data.email,
             password=hash_password(register_data.password),
-            is_admin=False,
-            is_active=False,  # not confirmed yet
+            role=RoleEnum.user,
+            # is_active=False,  # not confirmed yet
             is_deleted=False,
         )
 

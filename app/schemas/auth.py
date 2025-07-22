@@ -1,3 +1,5 @@
+from enum import Enum
+
 from pydantic import BaseModel
 
 
@@ -10,3 +12,11 @@ class TokenResponse(BaseModel):
 class UserRegisterRequest(BaseModel):
     email: str
     password: str
+
+
+class RoleEnum(str, Enum):
+    admin = "admin"
+    developer = "developer"
+    tester = "tester"
+    manager = "manager"
+    user = "user"
