@@ -30,3 +30,13 @@ STATIC_PATH.mkdir(exist_ok=True, parents=True)
 
 ALLOWED_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 MAX_FILE_SIZE = 5 * 1024 * 1024  # 5MB
+
+# Celery settings
+CELERY_BROKER_URL = "redis://localhost:6379/0"
+CELERY_RESULT_BACKEND = "redis://localhost:6379/1"
+EMAIL_ADDRESS = "ekzosfera94@gmail.com"
+EMAIL_PASSWORD = "rkcf svpv oldj nkrw"
+SMTP_PORT = 587
+SMTP_SERVER = "smtp.gmail.com"
+
+FRONTEND_URL = "http://127.0.0.1:8000"

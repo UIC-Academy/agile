@@ -1,11 +1,22 @@
 from fastapi import APIRouter, HTTPException
 
+from app.celery import send_email
 from app.dependencies import db_dep, oauth2_form_dep
 from app.enums import RoleEnum
 from app.models import User
 from app.schemas import TokenResponse, UserRegisterRequest
-from app.settings import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_MINUTES
-from app.utils import create_jwt_token, hash_password, verify_password
+from app.settings import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    FRONTEND_URL,
+    REFRESH_TOKEN_EXPIRE_MINUTES,
+)
+from app.utils import (
+    create_jwt_token,
+    decode_user_from_jwt_token,
+    generate_confirmation_token,
+    hash_password,
+    verify_password,
+)
 
 router = APIRouter(
     prefix="/auth",
@@ -27,14 +38,14 @@ async def register_user(db: db_dep, register_data: UserRegisterRequest):
             email=register_data.email,
             password=hash_password(register_data.password),
             role=RoleEnum.admin,
-            # is_active=False,  # not confirmed yet
+            is_active=False,  # not confirmed yet
         )
     else:
         user = User(
             email=register_data.email,
             password=hash_password(register_data.password),
             role=RoleEnum.user,
-            # is_active=False,  # not confirmed yet
+            is_active=False,  # not confirmed yet
             is_deleted=False,
         )
 
@@ -43,19 +54,17 @@ async def register_user(db: db_dep, register_data: UserRegisterRequest):
     db.refresh(user)
 
     # send confirmation email
-    # token = generate_confirmation_token(email=user.email)
+    token = generate_confirmation_token(user_id=user.id)
 
-    # send_email.delay(
-    #     to_email=user.email,
-    #     subject="Confirm your registration to Bookla",
-    #     body=f"You can click the link to confirm your email: {FRONTEND_URL}/auth/confirm/{token}/",
-    # )
+    send_email.delay(
+        to_email=user.email,
+        subject="Confirm your registration to Agile",
+        body=f"You can click the link to confirm your email: {FRONTEND_URL}/auth/confirm/{token}/",
+    )
 
-    # return {
-    #     "detail": f"Confirmation email sent to {user.email}. Please confirm to finalize your registration.",
-    # }
-
-    return {"detail": "Registration successful."}
+    return {
+        "detail": f"Confirmation email sent to {user.email}. Please confirm to finalize your registration.",
+    }
 
 
 @router.post("/login/")
@@ -77,3 +86,22 @@ async def login(form_data: oauth2_form_dep, db: db_dep):
     return TokenResponse(
         access_token=access_token, refresh_token=refresh_token, token_type="Bearer"
     )
+
+
+@router.get("/confirm/{token}/")
+async def confirm_email(db: db_dep, token: str):
+    print("Confirming email...", token)
+    user_id = decode_user_from_jwt_token(token=token).get("user_id")
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found",
+        )
+
+    user.is_active = True
+    db.commit()
+    db.refresh(user)
+
+    return {"detail": "Email confirmed"}
