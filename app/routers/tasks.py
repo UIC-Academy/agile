@@ -6,7 +6,8 @@ from app.dependencies import (
     db_dep,
     task_creatable_user_dep,
 )
-from app.models import Project, Status, Task
+from app.enums import RoleEnum
+from app.models import Project, Status, Task, User
 from app.schemas import (
     TaskCreateRequest,
     TaskDetailResponse,
@@ -15,8 +16,11 @@ from app.schemas import (
     TaskUpdateRequest,
 )
 from app.services import generate_task_key
+from app.ws_manager import WSManager
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
+
+ws_manager = WSManager()
 
 
 @router.get("/all/", response_model=list[TaskListResponse])
@@ -61,6 +65,18 @@ async def create_task(
     db.add(task)
     db.commit()
     db.refresh(task)
+
+    dev_test_user_ids = (
+        db.query(User.id)
+        .filter(User.role == RoleEnum.developer or User.role == RoleEnum.tester)
+        .scalars()
+        .all()
+    )
+
+    ws_manager.broadcast_to_users(
+        user_ids=dev_test_user_ids,
+        message={"type": "task_created", "task_key": task.key},
+    )
 
     return task
 
