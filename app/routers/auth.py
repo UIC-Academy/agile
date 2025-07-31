@@ -77,10 +77,12 @@ async def login(form_data: oauth2_form_dep, db: db_dep):
         raise HTTPException(status_code=400, detail="Incorrect username or password")
 
     access_token = create_jwt_token(
-        {"email": user.email}, expires_delta=ACCESS_TOKEN_EXPIRE_MINUTES
+        {"user_id": user.id, "role": user.role},
+        expires_delta=ACCESS_TOKEN_EXPIRE_MINUTES,
     )
     refresh_token = create_jwt_token(
-        {"email": user.email}, expires_delta=REFRESH_TOKEN_EXPIRE_MINUTES
+        {"user_id": user.id, "role": user.role},
+        expires_delta=REFRESH_TOKEN_EXPIRE_MINUTES,
     )
 
     return TokenResponse(

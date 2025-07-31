@@ -14,3 +14,11 @@ class StatusEnum(str, Enum):
     IN_PROGRESS = "IN_PROGRESS"
     READY_FOR_TEST = "READY_FOR_TEST"
     DONE = "DONE"
+
+
+class WSEventTypes(str, Enum):
+    task_created = "task_created"
+    task_status_change = "task_status_change"
+    task_move_ready = "task_move_ready"
+    task_rejected = "task_rejected"
+    task_created_high = "task_created_high"

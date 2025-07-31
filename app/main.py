@@ -1,3 +1,6 @@
+import logging
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
 from fastapi.staticfiles import StaticFiles
@@ -6,10 +9,33 @@ from app.admin.settings import admin
 from app.routers.auth import router as auth_router
 from app.routers.projects import router as projects_router
 from app.routers.tasks import router as tasks_router
-from app.routers.websockets import router as ws_router
 from app.settings import MEDIA_DIR, MEDIA_URL
+from app.websocket.manager import WSManager
+from app.websocket.routes import router as ws_router
 
-app = FastAPI()
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(levelname)s:     %(message)s - %(asctime)s",
+    handlers=[
+        logging.StreamHandler(),  # Output to console
+    ],
+)
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # before
+    logger.info("Starting application...")
+    ws_manager = WSManager()
+    app.state.ws_manager = ws_manager
+    yield
+    # after
+    logger.info("Stopping application...")
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/")

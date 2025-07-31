@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, HTTPException, Request, Response
 
 from app.dependencies import (
     admin_user_dep,
@@ -6,8 +6,8 @@ from app.dependencies import (
     db_dep,
     task_creatable_user_dep,
 )
-from app.enums import RoleEnum
-from app.models import Project, Status, Task, User
+from app.enums import WSEventTypes
+from app.models import Project, Status, Task
 from app.schemas import (
     TaskCreateRequest,
     TaskDetailResponse,
@@ -16,11 +16,9 @@ from app.schemas import (
     TaskUpdateRequest,
 )
 from app.services import generate_task_key
-from app.ws_manager import WSManager
+from app.websocket.manager import dispatch_ws_event
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
-
-ws_manager = WSManager()
 
 
 @router.get("/all/", response_model=list[TaskListResponse])
@@ -43,7 +41,10 @@ async def get_task_by_key(current_user: current_user_dep, db: db_dep, task_key: 
 
 @router.post("/create/", response_model=TaskDetailResponse)
 async def create_task(
-    current_user: task_creatable_user_dep, db: db_dep, data: TaskCreateRequest
+    current_user: task_creatable_user_dep,
+    db: db_dep,
+    data: TaskCreateRequest,
+    request: Request,
 ):
     project = db.query(Project).filter(Project.id == data.project_id).first()
 
@@ -66,16 +67,17 @@ async def create_task(
     db.commit()
     db.refresh(task)
 
-    dev_test_user_ids = (
-        db.query(User.id)
-        .filter(User.role == RoleEnum.developer or User.role == RoleEnum.tester)
-        .scalars()
-        .all()
-    )
+    ws_manager = request.app.state.ws_manager
 
-    ws_manager.broadcast_to_users(
-        user_ids=dev_test_user_ids,
-        message={"type": "task_created", "task_key": task.key},
+    await dispatch_ws_event(
+        ws_manager=ws_manager,
+        event_type=WSEventTypes.task_created,
+        project_id=task.project_id,
+        payload={
+            "type": WSEventTypes.task_created,
+            "task_id": task.id,
+            "project_id": task.project_id,
+        },
     )
 
     return task

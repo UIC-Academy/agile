@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -34,7 +36,7 @@ class TaskDetailResponse(BaseModel):
     priority: str
     assignee: TaskListUserNested
     reporter: TaskListUserNested
-    due_date: str
+    due_date: datetime
 
 
 class TaskCreateRequest(BaseModel):
