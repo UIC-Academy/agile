@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 
-from app.models import Project
+from app.models import Project, Task
 
 
 def generate_task_key(db: Session, project: Project) -> str:
-    tasks_count = project.tasks.count()
+    tasks_count = db.query(Task).filter(Task.project_id == project.id).count()
 
     generated_name = project.key + "-" + str(tasks_count + 1)
 

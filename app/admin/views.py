@@ -173,23 +173,6 @@ class TaskAdminView(ModelView):
     export_types: ClassVar[list[str]] = ["csv", "excel", "pdf", "print"]
 
 
-class StatusAdminView(ModelView):
-    fields: ClassVar[list[str]] = [
-        "id",
-        "name",
-        "description",
-    ]
-    exclude_fields_from_list: ClassVar[list[str]] = []
-    exclude_fields_from_create: ClassVar[list[str]] = []
-    exclude_fields_from_edit: ClassVar[list[str]] = []
-    export_fields: ClassVar[list[str]] = [
-        "id",
-        "name",
-        "description",
-    ]
-    export_types: ClassVar[list[str]] = ["csv", "excel", "pdf", "print"]
-
-
 class CommentAdminView(ModelView):
     fields: ClassVar[list[str]] = [
         "id",

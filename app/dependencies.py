@@ -38,11 +38,11 @@ async def get_current_user(db: db_dep, token: oauth2_scheme_dep):
             options={"verify_exp": True},
         )
 
-        email: str = payload.get("email")
-        if email is None:
-            raise HTTPException(status_code=401, detail="Invalid refresh token")
+        user_id: str = payload.get("user_id")
+        if user_id is None:
+            raise HTTPException(status_code=401, detail="Invalid access token")
 
-        user = db.query(User).filter(User.email == email).first()
+        user = db.query(User).filter(User.id == user_id).first()
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
 
@@ -52,11 +52,9 @@ async def get_current_user(db: db_dep, token: oauth2_scheme_dep):
         return user
 
     except JWTError as err:
-        raise HTTPException(status_code=401, detail="Invalid refresh token") from err
+        raise HTTPException(status_code=401, detail="Invalid access token") from err
     except jwt.ExpiredSignatureError as err:
-        raise HTTPException(
-            status_code=401, detail="Refresh token has expired"
-        ) from err
+        raise HTTPException(status_code=401, detail="Access token has expired") from err
 
 
 current_user_dep = Annotated[User, Depends(get_current_user)]

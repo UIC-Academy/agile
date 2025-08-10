@@ -1,7 +1,9 @@
+from fastapi import Request
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
+from app.enums import StatusEnum
 
 
 class TimeStampMixin:
@@ -53,6 +55,9 @@ class User(Base, TimeStampMixin):
     def __str__(self):
         return f"User(email={self.email})"
 
+    async def __admin_repr__(self, request: Request):
+        return self.email
+
 
 class Project(Base, TimeStampMixin):
     __tablename__ = "projects"
@@ -67,7 +72,7 @@ class Project(Base, TimeStampMixin):
 
     owner: Mapped["User"] = relationship("User", back_populates="owned_projects")
     members: Mapped[list["ProjectMember"]] = relationship(
-        "ProjectMember", back_populates="project"
+        "ProjectMember", back_populates="project", cascade="all, delete-orphan"
     )
     notifications: Mapped[list["Notification"]] = relationship(
         "Notification", back_populates="project"
@@ -76,6 +81,9 @@ class Project(Base, TimeStampMixin):
 
     def __str__(self):
         return f"Project(name={self.key})"
+
+    async def __admin_repr__(self, request: Request):
+        return self.key
 
 
 class ProjectMember(Base):
@@ -96,6 +104,9 @@ class ProjectMember(Base):
     def __str__(self):
         return f"ProjectMember(user_id={self.user_id}, project_id={self.project_id})"
 
+    async def __admin_repr__(self, request: Request):
+        return f"{self.user.email} - {self.project.key}"
+
 
 class Task(Base, TimeStampMixin):
     __tablename__ = "tasks"
@@ -107,8 +118,8 @@ class Task(Base, TimeStampMixin):
     key: Mapped[str] = mapped_column(String(20), nullable=False)
     summary: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str] = mapped_column(Text, nullable=True)
-    status_id: Mapped[str] = mapped_column(
-        Integer, ForeignKey("statuses.id", ondelete="CASCADE")
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default=StatusEnum.TODO
     )
     priority: Mapped[str] = mapped_column(String(10), nullable=False)
     assignee_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
@@ -116,7 +127,6 @@ class Task(Base, TimeStampMixin):
     due_date: Mapped[DateTime] = mapped_column(DateTime(timezone=True), nullable=True)
 
     project: Mapped["Project"] = relationship("Project", back_populates="tasks")
-    status: Mapped["Status"] = relationship("Status", back_populates="tasks")
     assignee: Mapped["User"] = relationship(
         "User", back_populates="assigned_tasks", foreign_keys="Task.assignee_id"
     )
@@ -134,18 +144,24 @@ class Task(Base, TimeStampMixin):
     def __str__(self):
         return f"Task(summary={self.summary})"
 
+    async def __admin_repr__(self, request: Request):
+        return self.key
 
-class Status(Base):
-    __tablename__ = "statuses"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(100), nullable=False)
-    description: Mapped[str] = mapped_column(String(255), nullable=True)
+# class Status(Base):
+#     __tablename__ = "statuses"
 
-    tasks: Mapped[list["Task"]] = relationship("Task", back_populates="status")
+#     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+#     name: Mapped[str] = mapped_column(String(100), nullable=False)
+#     description: Mapped[str] = mapped_column(String(255), nullable=True)
 
-    def __str__(self):
-        return f"Status(name={self.name})"
+#     tasks: Mapped[list["Task"]] = relationship("Task", back_populates="status")
+
+#     def __str__(self):
+#         return f"Status(name={self.name})"
+
+#     async def __admin_repr__(self, request: Request):
+#         return self.name
 
 
 class Comment(Base, TimeStampMixin):
@@ -161,6 +177,9 @@ class Comment(Base, TimeStampMixin):
 
     def __str__(self):
         return f"Comment(user_id={self.user_id})"
+
+    async def __admin_repr__(self, request: Request):
+        return self.content[:20]
 
 
 class Notification(Base, TimeStampMixin):
@@ -194,6 +213,9 @@ class Notification(Base, TimeStampMixin):
     def __str__(self):
         return f"Notification(user_id={self.recipient_id})"
 
+    async def __admin_repr__(self, request: Request):
+        return self.message[:20]
+
 
 class AuditLog(Base):
     __tablename__ = "audit_logs"
@@ -213,3 +235,6 @@ class AuditLog(Base):
 
     def __str__(self):
         return f"AuditLog(user_id={self.user_id})"
+
+    async def __admin_repr__(self, request: Request):
+        return self.action

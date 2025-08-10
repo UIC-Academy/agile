@@ -36,7 +36,7 @@ lint.ignore = [
 ]  
 
 # Paths to exclude
-exclude = ["migrations", "__pycache__", ".venv"]
+exclude = ["migrations", "__pycache__", ".venv", "alembic"]
 
 [tool.ruff.format]
 quote-style = "double"
