@@ -16,7 +16,7 @@ from app.schemas import (
     TaskUpdateRequest,
 )
 from app.services import generate_task_key
-from app.websocket.manager import dispatch_ws_event
+from app.websocket.utils import dispatch_ws_event
 
 router = APIRouter(prefix="/tasks", tags=["Tasks"])
 

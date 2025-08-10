@@ -40,3 +40,5 @@ SMTP_PORT = 587
 SMTP_SERVER = "smtp.gmail.com"
 
 FRONTEND_URL = "http://127.0.0.1:8000"
+
+REDIS_URL = "redis://localhost:6379"
