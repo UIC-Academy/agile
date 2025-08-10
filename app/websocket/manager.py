@@ -3,8 +3,6 @@ from collections import defaultdict
 
 from fastapi import WebSocket
 
-from app.enums import RoleEnum, WSEventTypes
-
 
 class WSManager:
     def __init__(self):
@@ -46,21 +44,3 @@ class WSManager:
         for user_id in members.keys():
             for user_id in self.local_connections.keys():
                 await self.local_connections[user_id].send_json(message)
-
-
-# Function-Based Event Dispatcher (instead of Redis Pub-Sub)
-async def dispatch_ws_event(
-    ws_manager: WSManager, event_type: str, project_id: int, payload: dict
-):
-    if event_type == WSEventTypes.task_created:
-        await ws_manager.send_to_roles(
-            project_id, payload, {RoleEnum.developer, RoleEnum.tester}
-        )
-    elif event_type == WSEventTypes.task_status_change:
-        await ws_manager.send_to_roles(project_id, payload, {RoleEnum.manager})
-    elif event_type == WSEventTypes.task_move_ready:
-        await ws_manager.send_to_roles(project_id, payload, {RoleEnum.tester})
-    elif event_type == WSEventTypes.task_rejected:
-        await ws_manager.send_to_roles(project_id, payload, {RoleEnum.developer})
-    elif event_type == WSEventTypes.task_created_high:
-        await ws_manager.send_to_all_project_members(project_id, payload)

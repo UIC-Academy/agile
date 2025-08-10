@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from contextlib import asynccontextmanager
 
@@ -12,6 +13,7 @@ from app.routers.tasks import router as tasks_router
 from app.settings import MEDIA_DIR, MEDIA_URL
 from app.websocket.manager import WSManager
 from app.websocket.routes import router as ws_router
+from app.websocket.utils import consume_events
 
 logging.basicConfig(
     level=logging.INFO,
@@ -27,12 +29,15 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # before
-    logger.info("Starting application...")
     ws_manager = WSManager()
     app.state.ws_manager = ws_manager
-    yield
-    # after
-    logger.info("Stopping application...")
+    task = asyncio.create_task(consume_events(app.state.ws_manager))
+    logger.info(f"Asyncio task <{task.get_name()}> is created to consume events.")
+    try:
+        yield
+    finally:
+        task.cancel()
+        logger.info(f"Asyncio task <{task.get_name()}> is cancelled.")
 
 
 app = FastAPI(lifespan=lifespan)
