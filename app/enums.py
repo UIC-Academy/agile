@@ -16,6 +16,12 @@ class StatusEnum(str, Enum):
     DONE = "DONE"
 
 
+class TaskPriorityEnum(str, Enum):
+    LOW = "LOW"
+    MEDIUM = "MEDIUM"
+    HIGH = "HIGH"
+
+
 class WSEventTypes(str, Enum):
     task_created = "task_created"
     task_status_change = "task_status_change"

@@ -38,8 +38,14 @@ async def register_user(db: db_dep, register_data: UserRegisterRequest):
             email=register_data.email,
             password=hash_password(register_data.password),
             role=RoleEnum.admin,
-            is_active=False,  # not confirmed yet
+            is_active=True,
         )
+
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+        return {"detail": f"Admin user created with email: {user.email}"}
     else:
         user = User(
             email=register_data.email,
@@ -49,22 +55,22 @@ async def register_user(db: db_dep, register_data: UserRegisterRequest):
             is_deleted=False,
         )
 
-    db.add(user)
-    db.commit()
-    db.refresh(user)
+        db.add(user)
+        db.commit()
+        db.refresh(user)
 
-    # send confirmation email
-    token = generate_confirmation_token(user_id=user.id)
+        # send confirmation email
+        token = generate_confirmation_token(user_id=user.id)
 
-    send_email.delay(
-        to_email=user.email,
-        subject="Confirm your registration to Agile",
-        body=f"You can click the link to confirm your email: {FRONTEND_URL}/auth/confirm/{token}/",
-    )
+        send_email.delay(
+            to_email=user.email,
+            subject="Confirm your registration to Agile",
+            body=f"You can click the link to confirm your email: {FRONTEND_URL}/auth/confirm/{token}/",
+        )
 
-    return {
-        "detail": f"Confirmation email sent to {user.email}. Please confirm to finalize your registration.",
-    }
+        return {
+            "detail": f"Confirmation email sent to {user.email}. Please confirm to finalize your registration.",
+        }
 
 
 @router.post("/login/")

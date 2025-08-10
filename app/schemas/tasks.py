@@ -2,13 +2,11 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
+from app.enums import StatusEnum, TaskPriorityEnum
+
 
 class TaskListProjectNested(BaseModel):
     key: str
-
-
-class TaskListStatusNested(BaseModel):
-    name: str
 
 
 class TaskListUserNested(BaseModel):
@@ -22,7 +20,7 @@ class TaskListResponse(BaseModel):
     project: TaskListProjectNested
     key: str
     summary: str
-    status: TaskListStatusNested
+    status: StatusEnum
     priority: str
 
 
@@ -32,7 +30,7 @@ class TaskDetailResponse(BaseModel):
     key: str
     summary: str
     description: str | None
-    status: TaskListStatusNested
+    status: StatusEnum
     priority: str
     assignee: TaskListUserNested
     reporter: TaskListUserNested
@@ -43,8 +41,8 @@ class TaskCreateRequest(BaseModel):
     project_id: int
     summary: str
     description: str | None
-    status_id: int
-    priority: str
+    status: StatusEnum
+    priority: TaskPriorityEnum
     assignee_id: int
     reporter_id: int
     due_date: str
@@ -53,12 +51,11 @@ class TaskCreateRequest(BaseModel):
 class TaskUpdateRequest(BaseModel):
     summary: str | None
     description: str | None
-    status_id: int | None
-    priority: str | None
+    priority: TaskPriorityEnum | None
     assignee_id: int | None
     reporter_id: int | None
     due_date: str | None
 
 
 class TaskMoveRequest(BaseModel):
-    status_id: int
+    status: StatusEnum
